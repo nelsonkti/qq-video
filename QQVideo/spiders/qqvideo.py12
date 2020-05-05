@@ -1,0 +1,29 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from QQVideo.items import QqvideoItem
+from scrapy_splash import SplashRequest
+
+
+class QqvideoSpider(scrapy.Spider):
+    name = 'qqvideo'
+    allowed_domains = ['v.qq.com']
+
+    start_urls = (
+        'https://v.qq.com/x/search/?q=斗罗大陆',
+    )
+
+    def start_requests(self):
+        splash_args = {
+            'wait': 0.5,
+        }
+        print('【开始解析】')
+        for url in self.start_urls:
+            yield SplashRequest(url, self.parse_result, endpoint='render.html',
+                                args=splash_args)
+
+
+    def parse_result(self, response):
+
+        pass
+
+

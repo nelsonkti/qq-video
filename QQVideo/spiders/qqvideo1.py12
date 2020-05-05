@@ -1,0 +1,113 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from QQVideo.items import QqvideoItem
+
+class QqvideoSpider(scrapy.Spider):
+    name = 'qqvideo'
+    allowed_domains = ['https://v.qq.com']
+    start_urls = ['https://v.qq.com/x/search/?q=斗罗大陆']
+
+    def parse(self, response):
+        item = QqvideoItem()
+        print('【开始解析】')
+        category_name = response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/h2/a/span[2]/text()').extract()[0]
+        print(category_name)
+
+        title = response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/h2/a/em/text()').extract()[0]
+        print(title)
+
+        # 解析发布时间
+        publish_time = '2020' + "-01-01 00:00:00"
+        print(publish_time)
+
+        img_url = 'http:' + response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/a/img/@src').extract()[0]
+        print(img_url)
+        desc = response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/div/div[4]/span[2]/text()').extract()[0]
+        print(desc)
+
+        author_name_arr = []
+        # 解析作者
+        authorList = response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/div/div[3]/span[2]/a')
+        print(authorList)
+
+        i = 0
+        author_name_string = ''
+        for author in authorList:
+            i = i + 1
+            author_name = author.xpath("/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/div/div[3]/span[2]/a["+str(i)+"]/text()").extract()[0]
+            author_name_string = author_name_string + author_name + ' '
+
+        print(author_name_string)
+
+
+        # 解析剧集
+        seriesList = response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[2]/div/div/div/div')
+        print(seriesList)
+
+        seriesArr = []
+        i = 0
+        for series in seriesList:
+            i = i + 1
+            series_num = series.xpath("/html/body/div[2]/div[2]/div[1]/div[2]/div[2]/div/div/div/div["+str(i)+"]/a/text()").extract()[0]
+            print(series_num)
+
+            series_url = series.xpath("/html/body/div[2]/div[2]/div[1]/div[2]/div[2]/div/div/div/div["+str(i)+"]/a/@href").extract()[0]
+
+            result = 'http' in series_url
+            if result:
+                seriesArr.append([series_num, series_url])
+
+        print(seriesArr)
+
+        print("整理数据")
+        if title and img_url and author_name_string and desc and publish_time and seriesArr:
+            print('数据 【完整】')
+
+            item['category_name'] = category_name
+            item['title'] = title
+            item['img_url'] = img_url
+            item['author_name'] = author_name_string
+            item['desc'] = desc
+            item['publish_time'] = publish_time
+            item['series'] = seriesArr
+        else:
+            print('数据 【不完整】')
+            print('category_name')
+            print(category_name)
+            print('title')
+            print(title)
+            print('img_url')
+            print(img_url)
+            print('author_name')
+            print(author_name)
+            print('desc')
+            print(desc)
+            print('publish_time')
+            print(publish_time)
+            print('series')
+            print(seriesArr)
+
+            if category_name is None:
+                print('category_name is None')
+
+            if title is None:
+                print('title is None')
+
+            if img_url is None:
+                print('img_url is None')
+
+            if author_name_string is None:
+                print('author_name_string is None')
+
+            if desc is None:
+                print('desc is None')
+
+            if publish_time is None:
+                print('publish_time is None')
+
+            if seriesArr is None:
+                print('seriesArr is None')
+
+        return item
+
+        pass

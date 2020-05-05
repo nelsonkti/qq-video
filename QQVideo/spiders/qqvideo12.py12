@@ -1,0 +1,78 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from QQVideo.items import QqvideoItem
+
+class QqvideoSpider(scrapy.Spider):
+    name = 'qqvideo'
+    allowed_domains = ['v.qq.com']
+    start_urls = ['https://v.qq.com/x/search/?q=斗罗大陆']
+
+    def parse(self, response):
+        item = QqvideoItem()
+        print('【开始解析】')
+        url = response.xpath("/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/a/@href").extract_first()
+
+        img_url = 'http:' + response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/a/img/@src').extract()[0]
+        print(img_url)
+
+        author_name_arr = []
+        # 解析作者
+        authorList = response.xpath('/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/div/div[3]/span[2]/a')
+        print(authorList)
+
+        i = 0
+        author_name_string = ''
+        for author in authorList:
+            i = i + 1
+            author_name = author.xpath("/html/body/div[2]/div[2]/div[1]/div[2]/div[1]/div/div/div[3]/span[2]/a[" + str(
+                i) + "]/text()").extract()[0]
+            author_name_string = author_name_string + author_name + ' '
+
+        print(author_name_string)
+
+
+        print(url)
+        item['img_url'] = response.url
+
+        yield scrapy.Request(url, meta={'url': url}, callback=self.parser)
+
+
+    def parser(self, response):
+        item = QqvideoItem()
+        category_name = response.xpath('/html/body/div[2]/div[1]/div/div/div/div[2]/h1/span[2]/text()').extract_first()
+        print(category_name)
+        title = response.xpath('/html/body/div[2]/div[1]/div/div/div/div[2]/h1/a/text()').extract_first()
+        print(title)
+
+        # 解析发布时间
+        publish_time = response.xpath('/html/body/div[2]/div[1]/div/div/div/div[4]/div[1]/span[2]/text()').extract_first()
+        publish_time = publish_time + "-01-01 00:00:00"
+        print(publish_time)
+
+        img_url = 'http:' + response.xpath('/html/body/div[2]/div[1]/div/div/span/a/img/@src').extract_first()
+        print(img_url)
+        desc = response.xpath('/html/body/div[2]/div[1]/div/div/div/div[6]/span[2]/span/text()').extract_first()
+        print(desc)
+
+        # 解析剧集
+        seriesList = response.xpath('/html/body/div[2]/div[2]/div[1]/div/div[1]/div[1]/span/div/div/div/span')
+        print(seriesList)
+
+        seriesArr = []
+        i = 0
+        for series in seriesList:
+            i = i + 1
+            series_num = series.xpath(
+                "/html/body/div[2]/div[2]/div[1]/div/div[1]/div[1]/span/div/div/div/span[" + str(i) + "]/a/span/text()").extract_first()
+            print(series_num)
+
+            series_url = series.xpath(
+                "/html/body/div[2]/div[2]/div[1]/div/div[1]/div[1]/span/div/div/div/span[" + str(i) + "]/a/@href").extract_first()
+
+            result = 'http' in series_url
+            if result:
+                seriesArr.append([series_num, series_url])
+
+        print(seriesArr)
+
+
